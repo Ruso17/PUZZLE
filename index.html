@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REGALO DE PUZZLE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.0/sweetalert2.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.0/sweetalert2.all.min.js"></script>
+    <link rel="icon" href="icono.ico">
+    <style>
+        html {
+    overflow: hidden; /* Evita que el fondo se mueva */
+}
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow: hidden; /* Evita que los elementos salgan del contenedor */
+        }
+
+        body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('fondos.jpg'); /* Reemplaza con la ruta de tu imagen */
+    background-size: contain; /* Mantiene la imagen centrada y pequeña */
+    background-position: center; /* Centra la imagen en el fondo */
+    background-repeat: no-repeat; /* Evita que la imagen se repita */
+    background-color: black; /* Establece el color de fondo negro para los bordes */
+    opacity: 0.9; /* Ajusta la opacidad de la imagen */
+    z-index: -1; /* Envía el pseudo-elemento al fondo */
+}
+
+/* Opcional: Aseguramos que la imagen mantenga su tamaño correcto en pantallas pequeñas */
+@media (max-width: 768px) {
+    body::before {
+        background-size: cover; /* Para pantallas más pequeñas, la imagen cubre toda la pantalla */
+        background-position: center;
+        background-color: transparent; /* El fondo negro no es necesario en pantallas pequeñas */
+    }
+}
+
+        .swal2-container {
+    position: fixed !important; /* Asegura que el modal no cambie el layout */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+        .puzzle-container {
+            width: 300px;
+            height: 300px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+        .piece {
+            background-size: 300px 300px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .piece:hover {
+            transform: scale(1.05);
+        }
+        .empty {
+            background: none;
+            cursor: default;
+            visibility: hidden; /* Ocultar la pieza vacía visualmente */
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px; /* Espacio entre los elementos */
+        }
+        .controls select {
+            padding: 10px;
+            width: 110px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .controls select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .controls-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .controls-buttons button {
+            width: 100px; /* Ajusta el ancho según sea necesario */
+            height: 43px;
+            padding: 10px;
+            font-size: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        }
+        .controls-buttons button {
+            background-color: #EE6EA0;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .controls-buttons button:hover {
+            background-color: #D880A3;
+            transform: scale(1.05);
+        }
+        .controls-buttons button:active {
+            background-color: #004494;
+        }
+    </style>
+</head>
+<body>
+    <br>
+    <div class="controls">
+        <select id="imageSelector" onchange="updateImage()">
+            <option value="353.jpg">Imagen 1</option>
+            <option value="354.jpg">Imagen 2</option>
+            <option value="355.jpg">Imagen 3</option>
+            <option value="356.jpg">Imagen 4</option>
+            <option value="357.jpg">Imagen 5</option>
+            <option value="358.jpg">Imagen 6</option>
+        </select>
+        <div class="controls-buttons">
+            <button onclick="showImage()">Resolver</button>
+            <button onclick="shufflePieces()">Reiniciar</button>
+        </div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <div class="puzzle-container" id="puzzle-container">
+        <!-- Las piezas del puzzle se generarán aquí -->
+    </div>
+    <br>
+    
+    <script>
+        const puzzleContainer = document.getElementById('puzzle-container');
+        const totalPieces = 8; // 3x3 grid with one empty space
+        let positions = [];
+        let currentImage = '353.jpg';
+        let emptyIndex = 8; // Índice de la pieza vacía
+
+        function generatePieces() {
+            puzzleContainer.innerHTML = ''; // Limpiar el contenedor del puzzle
+            positions = [];
+            for (let i = 0; i < totalPieces; i++) {
+                positions.push(i);
+            }
+            positions = positions.sort(() => Math.random() - 0.5); // Mezcla las piezas
+            positions.push(emptyIndex); // Añadir la posición de la pieza vacía al final
+
+            for (let i = 0; i <= totalPieces; i++) {
+                const piece = document.createElement('div');
+                piece.className = i === totalPieces ? 'piece empty' : 'piece';
+                piece.style.backgroundImage = `url('${currentImage}')`;
+                piece.style.backgroundPosition = `${(positions[i] % 3) * -100}px ${(Math.floor(positions[i] / 3)) * -100}px`;
+                piece.dataset.index = positions[i];
+                piece.dataset.position = i;
+                piece.addEventListener('click', movePiece);
+                puzzleContainer.appendChild(piece);
+            }
+        }
+
+        function movePiece() {
+            const pieces = Array.from(puzzleContainer.children);
+            const clickedIndex = Array.from(puzzleContainer.children).indexOf(this);
+            const emptyPiece = document.querySelector('.empty');
+            const emptyIndex = Array.from(puzzleContainer.children).indexOf(emptyPiece);
+
+            const clickedRow = Math.floor(clickedIndex / 3);
+            const clickedCol = clickedIndex % 3;
+            const emptyRow = Math.floor(emptyIndex / 3);
+            const emptyCol = emptyIndex % 3;
+
+            const isAdjacent = (Math.abs(emptyRow - clickedRow) === 1 && emptyCol === clickedCol) ||
+                               (Math.abs(emptyCol - clickedCol) === 1 && emptyRow === clickedRow);
+
+            if (isAdjacent) {
+                // Intercambiar la posición de las piezas
+                [this.style.backgroundPosition, emptyPiece.style.backgroundPosition] = [emptyPiece.style.backgroundPosition, this.style.backgroundPosition];
+                [this.dataset.index, emptyPiece.dataset.index] = [emptyPiece.dataset.index, this.dataset.index];
+                [this.dataset.position, emptyPiece.dataset.position] = [emptyPiece.dataset.position, this.dataset.position];
+                
+                // Actualizar el índice vacío
+                emptyPiece.classList.remove('empty');
+                this.classList.add('empty');
+                checkWin(); // Verificar si el puzzle está resuelto
+            }
+        }
+
+        function showImage() {
+            puzzleContainer.innerHTML = ''; // Limpiar el contenedor del puzzle
+            for (let i = 0; i < totalPieces; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'piece';
+                piece.style.backgroundImage = `url('${currentImage}')`;
+                piece.style.backgroundPosition = `${(i % 3) * -100}px ${(Math.floor(i / 3)) * -100}px`;
+                piece.dataset.index = i;
+                piece.dataset.position = i;
+                puzzleContainer.appendChild(piece);
+            }
+        }
+
+        function shufflePieces() {
+            generatePieces();
+        }
+
+        function updateImage() {
+            currentImage = document.getElementById('imageSelector').value;
+            shufflePieces();
+        }
+
+        function checkWin() {
+            const pieces = Array.from(puzzleContainer.children);
+            const isSolved = pieces.every((piece, index) => parseInt(piece.dataset.index) === index);
+
+            if (isSolved) {
+                Swal.fire({
+                    title: 'Felicidades Preciosa :p',
+                    text: 'Sabía que lo lograría <3',
+                    imageUrl: 'icon.jpg', /* Cambia 'icon.jpg' por la ruta de tu imagen personalizada */
+                    imageWidth: 200, /* Ajusta el ancho de la imagen si es necesario */
+                    imageAlt: 'Trofeo',
+                    confirmButtonText: 'Si quiere repetir c:'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        shufflePieces(); // Reiniciar y desordenar las piezas
+                    }
+                });
+            }
+        }
+
+        // Inicializar el puzzle al cargar la página
+        generatePieces();
+    </script>
+</body>
+</html>
